@@ -1,5 +1,5 @@
-import { useState } from 'react'
-
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 const Filter = (props) => {
     return(
         <input value={props.value} onChange={props.onChange}/>
@@ -23,16 +23,21 @@ const Persons = ({filteredData}) => {
 }
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456',},
-    { name: 'Ada Lovelace', number: '39-44-5323523',},
-    { name: 'Dan Abramov', number: '12-43-234345',},
-    { name: 'Mary Poppendieck', number: '39-23-6423122',}
-  ]) 
+  const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [filteredData, setFilteredData] = useState(persons)
+
+  useEffect(() => {
+    axios
+        .get('http://localhost:3001/persons')
+        .then(response => {
+            setPersons(response.data)
+            setFilteredData(response.data)
+            console.log(persons);
+        })
+  }, [])
   const handleSubmit = (event) => {
     event.preventDefault()
     if(!persons.some(person => person.name === newName)){
@@ -55,7 +60,6 @@ const App = () => {
   }
   const handleSearchChange = (event) => {
     setSearchInput(event.target.value)
-    console.log(searchInput);
     const entry = event.target.value.toLowerCase()
     setFilteredData(persons.filter((person) => {
         if(entry === ''){
@@ -65,7 +69,6 @@ const App = () => {
             return person.name.toLowerCase().includes(entry)
         }
     }))
-    console.log(filteredData)
   }
   return (
     <div>
