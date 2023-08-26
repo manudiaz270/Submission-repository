@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import personService from './services/persons'
 const Filter = (props) => {
     return(
         <input value={props.value} onChange={props.onChange}/>
@@ -14,7 +15,7 @@ const Form = (props) => {
       </form>
     )
 }
-const Persons = ({filteredData}) => {
+const Persons = ({filteredData, handleDelete}) => {
     return(
         <ul>
             {filteredData.map(person => <li key={Math.random()}> {person.name} {person.number}</li>)}
@@ -27,31 +28,40 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [filteredData, setFilteredData] = useState(persons)
+  const [filteredData, setFilteredData] = useState([])
 
   useEffect(() => {
-    axios
-        .get('http://localhost:3001/persons')
+    personService
+        .getAll()
         .then(response => {
-            setPersons(response.data)
-            setFilteredData(response.data)
+            setPersons(response)
+            setFilteredData(response)
             console.log(persons);
         })
   }, [])
+//   const handleDelete = (id) => {
+//     personService
+//         .erase(id)
+//   }
   const handleSubmit = (event) => {
     event.preventDefault()
     if(!persons.some(person => person.name === newName)){
-    const personObject =[{
+    const personObject ={
         name: newName,
-        number: newNumber
-    }]
-    setPersons(persons.concat(personObject))
-    setFilteredData(persons.concat(personObject))
+        number: newNumber,
+        id: Math.random()
+    }
+    personService   
+    .create(personObject)    
+    .then(response => {      
+            setPersons(persons.concat(response))
+            setFilteredData(persons.concat(response))
+    })
     }else{alert(`${newName} is already added to phonebook`)}
     setNewName('')
     setNewNumber('')
     }
-    
+
   const handleNameChange = (event) => {
     setNewName(event.target.value)
   }
