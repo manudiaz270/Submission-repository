@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react'
 import personService from './services/persons'
+
+const Notification = ({message}) => {
+    if (message.message === null) {
+        return null
+    }
+    if (message.positive) {
+    return(
+        <div className='positive_message'>{message.message}</div>
+    )
+    }
+    return(
+        <div className='negative_message'>{message.message}</div>
+    )
+}
 const Filter = (props) => {
     return(
         <input value={props.value} onChange={props.onChange}/>
@@ -28,6 +42,7 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [filteredData, setFilteredData] = useState([])
+  const [errorMessage, setErrorMessage] = useState({message: null, positive: true})
 
   useEffect(() => {
     personService
@@ -60,6 +75,10 @@ const App = () => {
     .then(response => {      
             setPersons(persons.concat(response))
             setFilteredData(persons.concat(response))
+            setErrorMessage({message:`Added ${response.name}`,positive:true})
+            setTimeout(() => {
+                setErrorMessage({...errorMessage, message: null})
+            },5000)
     })
     }else{
         if(window.confirm("Change this contacts number?")){
@@ -69,6 +88,19 @@ const App = () => {
         .then(response => {
             setPersons(persons.map(p => p.id !== personToChange.id ? p : response))
             setFilteredData(persons.map(p => p.id !== personToChange.id ? p : response))
+            setErrorMessage({message:`Changed ${response.name}'s contanct number`,positive:true})
+            setTimeout(() => {
+                setErrorMessage({...errorMessage, message: null})
+            },5000)
+        })
+        .catch(error => {
+            setErrorMessage({message:'This contact has already been removed from server',positive:false})
+            setTimeout(() => {
+                setErrorMessage({...errorMessage, message: null})
+            },5000)
+            setPersons(persons.filter(person => person.id !== personToChange.id))
+            setFilteredData(persons.filter(person => person.id !== personToChange.id))
+
         })
     }
     }
@@ -97,6 +129,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={errorMessage}/>
       <Filter value={searchInput} onChange={handleSearchChange}/>
       <h2>Add new number</h2>
       <Form onSubmit={handleSubmit} nameValue={newName} nameChange={handleNameChange} numberChange={handleNumberChange}
